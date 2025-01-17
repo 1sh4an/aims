@@ -16,7 +16,7 @@ export default function Home() {
   const [email, setEmail] = useState("");
 
   return (
-    <main className="flex flex-col h-screen">
+    <main>
       <nav>
         <NavigationMenu className="p-4">
           <NavigationMenuList>
@@ -26,7 +26,7 @@ export default function Home() {
           </NavigationMenuList>
         </NavigationMenu>
       </nav>
-      <section className="flex justify-center items-center h-full">
+      <section className="w-full flex justify-center mt-20">
         {otpPage ? (
           <OTPCard email={email} setotpPage={setotpPage} />
         ) : (
