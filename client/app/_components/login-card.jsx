@@ -23,12 +23,17 @@ import { useForm } from "react-hook-form";
 
 import React from "react";
 import { LoginFormSchema } from "@/utils/zod/schemas";
+import axios from "axios";
 
-export default function LoginCard({ email, setEmail, setotpPage }) {
+export default function LoginCard() {
   const form = useForm({ resolver: zodResolver(LoginFormSchema) });
   const { register, handleSubmit } = form;
 
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = async (data) => {
+    await axios.post("http://localhost:4000/send-otp", {
+      recipient: data.email,
+    });
+  };
 
   return (
     <Form {...form}>

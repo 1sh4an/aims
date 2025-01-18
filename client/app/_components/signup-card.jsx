@@ -31,7 +31,7 @@ import { useForm } from "react-hook-form";
 import React from "react";
 import { SignupFormSchema } from "@/utils/zod/schemas";
 
-export default function SignupCard({ email, setEmail, setotpPage }) {
+export default function SignupCard() {
   const form = useForm({ resolver: zodResolver(SignupFormSchema) });
   const { register, handleSubmit } = form;
 
