@@ -1,5 +1,7 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -28,11 +30,18 @@ import axios from "axios";
 export default function LoginCard() {
   const form = useForm({ resolver: zodResolver(LoginFormSchema) });
   const { register, handleSubmit } = form;
+  const router = useRouter();
 
   const onSubmit = async (data) => {
-    await axios.post("http://localhost:4000/send-otp", {
+    const res = await axios.post("http://localhost:4000/submit-login", {
       recipient: data.email,
     });
+
+    if (res.data.valid) {
+      router.push(`/login?email=${data.email}`);
+    } else {
+      console.log("Error sending OTP");
+    }
   };
 
   return (

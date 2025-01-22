@@ -15,54 +15,105 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useState } from "react";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { OTPFormSchema } from "@/utils/zod/schemas";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-export default function OTPCard({ email, otpOriginal, setotpPage }) {
-  const [otpEntered, setOtpEntered] = useState("");
+export default function OTPCard({ email }) {
+  const form = useForm({ resolver: zodResolver(OTPFormSchema) });
+  const [invalidMessage, setInvalidMessage] = useState(false);
+  const { handleSubmit } = form;
+  const router = useRouter();
+
+  const onSubmit = async (data) => {
+    setInvalidMessage(false);
+    const res = await axios.post("http://localhost:4000/verify-login", {
+      email: email,
+      otp: data.otp,
+    });
+
+    if (res.data.valid) {
+      console.log("OTP verified successfully");
+      router.push("/home");
+    } else {
+      console.log("Invalid OTP");
+      setInvalidMessage(true);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    await axios.post("http://localhost:4000/delete-otp", {
+      email: email,
+    });
+    router.push("/");
+  };
+
   return (
-    <Card className="p-6">
-      <CardHeader>
-        <CardTitle>Please enter the OPT sent to your Email</CardTitle>
-        <CardDescription>{email}</CardDescription>
-      </CardHeader>
-      <CardContent className="py-6">
-        <InputOTP
-          maxLength={6}
-          onChange={(e) => {
-            setOtpEntered(e.target);
-            console.log(otpEntered + " " + otpOriginal);
-            if (otpEntered == otpOriginal) {
-              console.log("OTP is correct");
-            }
-          }}
-        >
-          <InputOTPGroup>
-            <InputOTPSlot index={0} />
-            <InputOTPSlot index={1} />
-            <InputOTPSlot index={2} />
-          </InputOTPGroup>
-          <InputOTPSeparator />
-          <InputOTPGroup>
-            <InputOTPSlot index={3} />
-            <InputOTPSlot index={4} />
-            <InputOTPSlot index={5} />
-          </InputOTPGroup>
-        </InputOTP>
-      </CardContent>
-      <CardFooter className=" row">
-        <Button className="w-full" onClick={() => {}}>
-          Verify OTP
-        </Button>
-        <div className="w-2"></div>
-        <Button
-          className="w-full"
-          variant="outline"
-          onClick={() => setotpPage(false)}
-        >
-          Resend OTP
-        </Button>
-      </CardFooter>
-    </Card>
+    <Form {...form}>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Card className="p-6">
+          <CardHeader>
+            <CardTitle>Please enter the OTP sent to your Email</CardTitle>
+            <CardDescription>{email}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="otp"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <InputOTP maxLength={6} {...field}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                      </InputOTPGroup>
+                      <InputOTPSeparator />
+                      <InputOTPGroup>
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </FormControl>
+                  {invalidMessage && (
+                    <FormDescription className="text-red-500 font-semibold text-sm mt-5">
+                      Invalid OTP. Please try again or resend OTP.
+                    </FormDescription>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+          <CardFooter className=" row">
+            <Button className="w-full" type="submit">
+              Verify OTP
+            </Button>
+            <div className="w-2"></div>
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={handleResendOTP}
+            >
+              Resend OTP
+            </Button>
+          </CardFooter>
+        </Card>
+      </form>
+    </Form>
   );
 }

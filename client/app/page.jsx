@@ -6,9 +6,7 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
 import LoginCard from "./_components/login-card";
-import OTPCard from "./_components/otp-card";
 import SignupCard from "./_components/signup-card";
 
 export default function Home() {
