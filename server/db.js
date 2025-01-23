@@ -49,4 +49,43 @@ const deleteOTP = async (email) => {
   }
 };
 
-export { storeOTP, getOTP, deleteOTP };
+const addStudent = async (name, email, entryNumber, batch, department) => {
+  try {
+    const user = await db.query(
+      "INSERT INTO users (user_name, email, department_code) VALUES ($1, $2, $3) RETURNING *",
+      [name, email, department]
+    );
+
+    const student = await db.query(
+      "INSERT INTO students (user_id, student_entry_no, batch) VALUES ($1, $2, $3) RETURNING *",
+      [user.rows[0].user_id, entryNumber.toUpperCase(), batch]
+    );
+  } catch (error) {
+    console.log("Error adding student", error);
+  }
+};
+
+const addFaculty = async (name, email, facultyAdvisor, department) => {
+  try {
+    const user = await db.query(
+      "INSERT INTO users (user_name, email, department_code) VALUES ($1, $2, $3) RETURNING *",
+      [name, email, department]
+    );
+
+    const faculty = await db.query(
+      "INSERT INTO faculty (user_id) VALUES ($1) RETURNING *",
+      [user.rows[0].user_id]
+    );
+
+    if (facultyAdvisor == "true") {
+      const advisor = await db.query(
+        "INSERT INTO advisors (department_code, faculty_id) VALUES ($1, $2) RETURNING *",
+        [department, faculty.rows[0].faculty_id]
+      );
+    }
+  } catch (error) {
+    console.log("Error adding faculty", error);
+  }
+};
+
+export { db, storeOTP, getOTP, deleteOTP, addStudent, addFaculty };

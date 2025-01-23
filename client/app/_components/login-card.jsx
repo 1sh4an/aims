@@ -23,24 +23,27 @@ import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-import React from "react";
+import { useState } from "react";
 import { LoginFormSchema } from "@/utils/zod/schemas";
 import axios from "axios";
 
 export default function LoginCard() {
   const form = useForm({ resolver: zodResolver(LoginFormSchema) });
-  const { register, handleSubmit } = form;
+  const { handleSubmit } = form;
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const onSubmit = async (data) => {
+    setErrorMessage("");
     const res = await axios.post("http://localhost:4000/submit-login", {
       recipient: data.email,
     });
 
     if (res.data.valid) {
-      router.push(`/login?email=${data.email}`);
+      const queryParams = new URLSearchParams(data);
+      router.push(`/auth?user=any&type=login&${queryParams.toString()}`);
     } else {
-      console.log("Error sending OTP");
+      setErrorMessage(res.data.message);
     }
   };
 
@@ -67,7 +70,7 @@ export default function LoginCard() {
                   <FormDescription>
                     Please Enter your registered institute email id
                   </FormDescription>
-                  <FormMessage />
+                  <FormMessage>{errorMessage}</FormMessage>
                 </FormItem>
               )}
             />

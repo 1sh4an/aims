@@ -31,7 +31,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function OTPCard({ email }) {
+export default function OTPCard({ email, type, user, signup_data }) {
   const form = useForm({ resolver: zodResolver(OTPFormSchema) });
   const [invalidMessage, setInvalidMessage] = useState(false);
   const { handleSubmit } = form;
@@ -39,17 +39,44 @@ export default function OTPCard({ email }) {
 
   const onSubmit = async (data) => {
     setInvalidMessage(false);
-    const res = await axios.post("http://localhost:4000/verify-login", {
-      email: email,
-      otp: data.otp,
-    });
+    try {
+      const res = await axios.post("http://localhost:4000/verify-otp", {
+        email: email,
+        otp: data.otp,
+      });
 
-    if (res.data.valid) {
-      console.log("OTP verified successfully");
-      router.push("/home");
-    } else {
-      console.log("Invalid OTP");
-      setInvalidMessage(true);
+      if (res.data.valid) {
+        console.log("OTP verified successfully");
+
+        if (type === "signup") {
+          if (user === "student") {
+            const student = await axios.post(
+              "http://localhost:4000/signup-student",
+              signup_data
+            );
+          } else if (user === "faculty") {
+            const faculty = await axios.post(
+              "http://localhost:4000/signup-faculty",
+              signup_data
+            );
+          }
+        }
+
+        const login = await axios.post(
+          "http://localhost:4000/login",
+          {
+            email: email,
+          },
+          { withCredentials: true }
+        );
+
+        router.push("/home");
+      } else {
+        console.log("Invalid OTP");
+        setInvalidMessage(true);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -109,7 +136,7 @@ export default function OTPCard({ email }) {
               variant="outline"
               onClick={handleResendOTP}
             >
-              Resend OTP
+              Retry
             </Button>
           </CardFooter>
         </Card>

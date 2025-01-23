@@ -8,8 +8,27 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginCard from "./_components/login-card";
 import SignupCard from "./_components/signup-card";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { useEffect } from "react";
 
 export default function Home() {
+  const router = useRouter();
+  axios.defaults.withCredentials = true;
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      const res = await axios
+        .get("http://localhost:4000/session")
+        .then((res) => {
+          if (res.data.valid) {
+            router.push("/home");
+          }
+        });
+    };
+    fetchSession();
+  }, []);
+
   return (
     <main>
       <nav>
