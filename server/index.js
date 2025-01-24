@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { sendOTP } from "./mail.js";
+import { sendOTP, sendInstructorVerificationEmail } from "./mail.js";
 import {
   db,
   storeOTP,
@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(
   cors({
     credentials: true,
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_URL,
   })
 );
 app.use(cookieParser());
@@ -246,6 +246,135 @@ app.post("/logout", (req, res) => {
     res.clearCookie("connect.sid"); // Clear session cookie
     res.status(200).json({ message: "Logged out successfully" });
   });
+});
+
+app.post("/user-type", async (req, res) => {
+  const { user_id } = req.body;
+
+  const stu = await db.query("SELECT * FROM students WHERE user_id = $1", [
+    user_id,
+  ]);
+  if (stu.rows.length > 0) {
+    return res.status(200).json({ valid: true, user_type: "student" });
+  }
+
+  const fac = await db.query("SELECT * FROM faculty WHERE user_id = $1", [
+    user_id,
+  ]);
+  if (fac.rows.length > 0) {
+    return res.status(200).json({ valid: true, user_type: "faculty" });
+  }
+
+  return res.status(204).json({ valid: false, user_type: "unknown" });
+});
+
+app.get("/student-details", async (req, res) => {
+  const { user_id } = req.session.user;
+
+  const student = await db.query(
+    "SELECT * FROM users NATURAL JOIN students NATURAL JOIN departments WHERE user_id = $1;",
+    [user_id]
+  );
+
+  if (student.rows.length > 0) {
+    return res.status(200).json({ valid: true, student: student.rows[0] });
+  }
+
+  return res.status(204).json({ valid: false, message: "Student not found" });
+});
+
+app.get("/student-enrollments", async (req, res) => {
+  const { user_id } = req.session.user;
+
+  try {
+    const enrollments = await db.query(
+      "SELECT * FROM enrollments NATURAL JOIN courses NATURAL JOIN students WHERE user_id = $1;",
+      [user_id]
+    );
+    return res.status(200).json({ valid: true, enrollments: enrollments.rows });
+  } catch (e) {
+    console.log("Error fetching enrollments: ", e);
+    return res.status(400).json({ valid: false, message: "Bad Request" });
+  }
+});
+
+app.get("/available-courses", async (req, res) => {
+  const { user_id } = req.session.user;
+
+  try {
+    const courses = await db.query(
+      `SELECT * FROM courses
+       NATURAL JOIN faculty
+       NATURAL JOIN users
+       NATURAL JOIN departments
+       WHERE course_code NOT IN
+       (
+       	 SELECT course_code FROM enrollments
+       	 NATURAL JOIN students
+       	 WHERE user_id = $1
+       );`,
+      [user_id]
+    );
+    return res.status(200).json({ valid: true, courses: courses.rows });
+  } catch (e) {
+    console.log("Error fetching enrollments: ", e);
+    return res.status(400).json({ valid: false, message: "Bad Request" });
+  }
+});
+
+app.put("/update-enrollment-status", async (req, res) => {
+  const { enrollment_id, newState } = req.body;
+
+  try {
+    await db.query(
+      "UPDATE enrollments SET status = $1 WHERE enrollment_id = $2",
+      [newState, enrollment_id]
+    );
+    return res
+      .status(200)
+      .json({ valid: true, message: "Enrollment status updated successfully" });
+  } catch (e) {
+    console.log("Error updating enrollment status: ", e);
+    return res.status(400).json({ valid: false, message: "Bad Request" });
+  }
+});
+
+app.post("/credit-course", async (req, res) => {
+  const { course_code } = req.body;
+  const { user_id } = req.session.user;
+
+  try {
+    const student = await db.query(
+      "SELECT * FROM students WHERE user_id = $1",
+      [user_id]
+    );
+    await db.query(
+      "INSERT INTO enrollments (course_code, student_entry_no, status) VALUES ($1, $2, $3);",
+      [
+        course_code,
+        student.rows[0].student_entry_no,
+        "pending instructor approval",
+      ]
+    );
+
+    const instructor = await db.query(
+      "SELECT email FROM courses NATURAL JOIN faculty NATURAL JOIN users WHERE course_code = $1",
+      [course_code]
+    );
+
+    await sendInstructorVerificationEmail(
+      instructor.rows[0].email,
+      course_code,
+      req.session.user
+    );
+
+    return res
+      .status(200)
+      .json({ valid: true, message: "Course credited successfully" });
+  } catch (error) {
+    console.log("Error while creditind course: ", error);
+    return res.status(400).json({ valid: false, message: "Bad Request" });
+  }
 });
 
 app.listen(PORT, () => {
