@@ -377,6 +377,44 @@ app.post("/credit-course", async (req, res) => {
   }
 });
 
+app.post("/course-details", async (req, res) => {
+  const { course_code } = req.body;
+
+  try {
+    const course_data = await db.query(
+      "SELECT * FROM courses NATURAL JOIN faculty NATURAL JOIN users NATURAL JOIN departments WHERE course_code = $1;",
+      [course_code]
+    );
+
+    return res
+      .status(200)
+      .json({ valid: true, course_data: course_data.rows[0] });
+  } catch (error) {
+    console.log("Error while fetching course details: ", error);
+    return res.status(400).json({ valid: false, message: "Bad Request" });
+  }
+});
+
+app.post("/course-enrollments", async (req, res) => {
+  const { course_code } = req.body;
+
+  try {
+    const enrollments = await db.query(
+      `SELECT * FROM enrollments
+        NATURAL JOIN students
+        NATURAL JOIN users
+        NATURAL JOIN departments
+        WHERE course_code = $1;`,
+      [course_code]
+    );
+
+    return res.status(200).json({ valid: true, enrollments: enrollments.rows });
+  } catch (error) {
+    console.log("Error while fetching course enrollments: ", error);
+    return res.status(400).json({ valid: false, message: "Bad Request" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Listening on port : ${PORT}`);
 });

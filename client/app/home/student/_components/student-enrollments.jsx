@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+import Link from "next/link";
 
 export default function StudentEnrollments() {
   const [data, setData] = useState([]);
@@ -98,9 +99,19 @@ export default function StudentEnrollments() {
                   <TableRow key={index}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{enrollment.course_code}</TableCell>
-                    <TableCell>{enrollment.course_name}</TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/home/student/courses/details?course_code=${enrollment.course_code}`}
+                        className="hover:underline"
+                      >
+                        {enrollment.course_name}
+                      </Link>
+                    </TableCell>
                     <TableCell>{enrollment.credits}</TableCell>
-                    <TableCell>{enrollment.status}</TableCell>
+                    <TableCell>
+                      {enrollment.status.charAt(0).toUpperCase() +
+                        enrollment.status.slice(1)}
+                    </TableCell>
                     <TableCell>
                       {["audited", "withdrawn", "dropped"].includes(
                         enrollment.status
