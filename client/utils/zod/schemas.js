@@ -44,4 +44,24 @@ const OTPFormSchema = z.object({
   otp: z.string().regex(/^\d{6}$/, { message: "OTP must be a 6-digit number" }),
 });
 
-export { LoginFormSchema, StudentFormSchema, OTPFormSchema, FacultyFormSchema };
+const CourseFormSchema = z.object({
+  course_code: z
+    .string()
+    .regex(/^[A-Z]{2}\d{3}$/, { message: "Invaild course code format" }),
+  course_name: z.string().min(1, { message: "This field has to be filled" }),
+  credits: z.preprocess((value) => {
+    if (typeof value === "string" && value.trim() !== "") {
+      const parsed = parseInt(value, 10);
+      return isNaN(parsed) ? undefined : parsed;
+    }
+    return value;
+  }, z.number().int().min(1, { message: "Must be a positive integer" })),
+  semester: z.string().min(1, { message: "This field has to be filled" }),
+});
+export {
+  LoginFormSchema,
+  StudentFormSchema,
+  OTPFormSchema,
+  FacultyFormSchema,
+  CourseFormSchema,
+};

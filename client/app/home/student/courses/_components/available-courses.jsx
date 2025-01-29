@@ -70,50 +70,59 @@ export default function AvailableCourses() {
         Courses available for enrollment
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-        {data.map((course, index) => (
-          <Card key={index}>
-            <CardHeader>
-              <CardTitle>
-                <Link
-                  href={`/home/student/courses/details?course_code=${course.course_code}`}
-                  className="hover:underline"
-                >{`${course.course_code}: ${course.course_name}`}</Link>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-semibold">Instructor</TableCell>
-                    <TableCell>{course.user_name}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">Department</TableCell>
-                    <TableCell>{course.department_name}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">Credits</TableCell>
-                    <TableCell>{course.credits}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-semibold">Semester</TableCell>
-                    <TableCell>{course.semester}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-1/2"
-                onClick={() => {
-                  handleCredit(course.course_code);
-                }}
-              >
-                Credit
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+        {data.map(
+          (course, index) =>
+            course.course_status === "enrolling" && (
+              <Card key={index}>
+                <CardHeader>
+                  <CardTitle>
+                    <Link
+                      href={`/home/student/courses/details?course_code=${course.course_code}`}
+                      className="hover:underline"
+                    >{`${course.course_code}: ${course.course_name}`}</Link>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-semibold">
+                          Instructor
+                        </TableCell>
+                        <TableCell>{course.user_name}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-semibold">
+                          Department
+                        </TableCell>
+                        <TableCell>{course.department_name}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-semibold">Credits</TableCell>
+                        <TableCell>{course.credits}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-semibold">
+                          Semester
+                        </TableCell>
+                        <TableCell>{course.semester}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    className="w-1/2"
+                    onClick={() => {
+                      handleCredit(course.course_code);
+                    }}
+                  >
+                    Credit
+                  </Button>
+                </CardFooter>
+              </Card>
+            )
+        )}
       </div>
       <Toaster />
     </div>
